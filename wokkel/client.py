@@ -88,10 +88,11 @@ class XMPPClient(StreamManager, service.Service):
     Service that initiates an XMPP client connection.
     """
 
-    def __init__(self, jid, password, host=None, port=5222):
+    def __init__(self, jid, password, host=None, port=5222, bindAddress=None):
         self.domain = jid.host
         self.host = host
         self.port = port
+        self.bindAddress = bindAddress
 
         factory = HybridClientFactory(jid, password)
 
@@ -120,9 +121,11 @@ class XMPPClient(StreamManager, service.Service):
 
     def _getConnection(self):
         if self.host:
-            return reactor.connectTCP(self.host, self.port, self.factory)
+            return reactor.connectTCP(self.host, self.port, self.factory,
+                bindAddress=self.bindAddress)
         else:
-            c = SRVConnector(reactor, 'xmpp-client', self.domain, self.factory)
+            c = SRVConnector(reactor, 'xmpp-client', self.domain, self.factory,
+                connectFuncKwArgs={'bindAddress': self.bindAddress})
             c.connect()
             return c
 
